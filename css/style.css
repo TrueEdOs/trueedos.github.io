@@ -1,0 +1,27 @@
+.desc {
+    color: black;
+}
+img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+body {
+    align-content: center;
+    background-color: #03dffc;
+}
+.fundiv {
+    font-size: large;
+    color: blueviolet;
+}
+.funlinks {
+}
+.contact {
+    margin-top: 50px;
+}
+
+@media screen and (min-width: 1000px){
+.shifted {
+    margin-left: 20%;
+}
+}

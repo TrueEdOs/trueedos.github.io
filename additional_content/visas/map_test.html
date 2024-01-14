@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>American visa duration map</title>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+
+        h1 {
+            font-size: 30px;
+            color: #613b1e;
+            margin: 20px auto 20px auto;
+            display: block;
+            text-align: center;
+        }
+
+        h2 {
+            margin: 0;
+            padding: 0;
+            font-size: 22px;
+            color: #343434;
+
+        }
+
+        .container {
+            width: 90%;
+            overflow: hidden;
+            min-width: 700px;
+            max-width: 2400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .knobContainer {
+            text-align: center;
+            margin: 10px;
+        }
+
+        .knobContainer canvas {
+            cursor: pointer;
+        }
+
+        .rightPanel {
+            float: right;
+            width: 223px;
+            border-radius: 5px;
+            margin-left: 5px;
+        }
+
+        /* Specific mapael css class are below
+         * 'mapael' class is added by plugin
+        */
+        
+        .mapael .mapTooltip {
+            position: absolute;
+            background-color: #fff;
+            moz-opacity: 0.80;
+            opacity: 0.80;
+            filter: alpha(opacity=80);
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 1000;
+            max-width: 400px;
+            display: none;
+            color: #232323;
+        }
+        
+        .mapael .map {
+            margin-right: 228px;
+            overflow: hidden;
+            position: relative;
+            background-color: #232323;
+            border-radius: 5px;
+        }
+
+        /* For all zoom buttons */
+        .mapael .zoomButton {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            color: #000;
+            width: 15px;
+            height: 15px;
+            line-height: 15px;
+            text-align: center;
+            border-radius: 3px;
+            cursor: pointer;
+            position: absolute;
+            top: 0;
+            font-weight: bold;
+            left: 10px;
+
+            -webkit-user-select: none;
+            -khtml-user-select : none;
+            -moz-user-select: none;
+            -o-user-select : none;
+            user-select: none;
+        }
+
+        /* Reset Zoom button first */
+        .mapael .zoomReset {
+            top: 10px;
+        }
+
+        /* Then Zoom In button */
+        .mapael .zoomIn {
+            top: 30px;
+        }
+
+        /* Then Zoom Out button */
+        .mapael .zoomOut {
+            top: 50px;
+        }
+        
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"
+            charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js" charset="utf-8"></script>
+    <script src="js/jquery.mapael.js" charset="utf-8"></script>
+    <script src="https://rawgit.com/aterrien/jQuery-Knob/master/dist/jquery.knob.min.js" charset="utf-8"></script>
+    <script src="js/maps/world_countries.js" charset="utf-8"></script>
+    <script type="text/javascript" src="visas-array.js" charset="utf-8"></script>
+    <script type="text/javascript">
+        var data = {}
+        for (const [visa_type, visa_details] of Object.entries(visa_data)) {
+            data[visa_type] = {}
+            for (const [key, value] of Object.entries(visa_details)) {
+                data[visa_type][key] = {};
+                data[visa_type][key]["value"] = value["duration"];
+                data[visa_type][key]["href"] = country_details[key]["href"];
+                data[visa_type][key]["tooltip"] = {
+                    "content": "<span style=\"font-weight:bold;\">" + country_details[key]["name"] + "</span><br/> Visa duration: " + value["duration_text"]
+                }
+            }
+        }
+
+        $(function () {
+            var menu = "";
+            for (const [visa, value] of Object.entries(visa_data)) {
+                menu += "<option value=\"" + visa + "\">" + visa + "</option>\n"
+            }
+            document.getElementById("visa-type").innerHTML = menu;
+
+            var last = 0;
+            var duration = [3, 6, 12, 24, 36, 60, 120];
+            var red = 255;
+            var slices = [];
+
+            for (var i = 0; i < duration.length; i++) {
+                slices.push(
+                    {
+                        min: last,
+                        max: duration[i],
+                        attrs: {
+                            fill: "#" + ((255 * (140 - duration[i]) / 140) | 0).toString(16) + "bf00"
+                        },
+                        label: "Less than " + duration[i]
+                    }
+                );
+                last = duration[i];
+                red -= 255 / duration.length;
+                red |= 0;
+            }
+
+            $world = $(".world");
+            $world.mapael({
+                map: {
+                    name: "world_countries",
+                    defaultArea: {
+                        attrs: {
+                            fill: "#fff",
+                            stroke: "#232323",
+                            "stroke-width": 0.3
+                        }
+                    },
+                    defaultPlot: {
+                        text: {
+                            attrs: {
+                                fill: "#b4b4b4",
+                                "font-weight": "normal"
+                            },
+                            attrsHover: {
+                                fill: "#fff",
+                                "font-weight": "bold"
+                            }
+                        }
+                    }
+                    , zoom: {
+                        enabled: true
+                        , step: 0.25
+                        , maxLevel: 20
+                    }
+                },
+                legend: {
+                    area: {
+                        display: true,
+                        title: "Visa duration",
+                        marginBottom: 7,
+                        slices: slices
+                    }
+                },
+                areas: data["A-1"]
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        function update_map(value) {
+            $(".world").trigger('update', [{
+                        mapOptions: {"areas": data[value]},
+                        animDuration: 300
+                    }]);
+        }
+    </script>
+</head>
+
+<body>
+<div class="container">
+    <h1>American visa duration map</h1>
+    <div class="world">
+        <div class="rightPanel">
+            <label for="visa-type">Choose a visa type: </label>
+            <select name="visa-type" id="visa-type" onclick="update_map(value)"></select>
+            <div class="areaLegend"></div>
+            <div class="plotLegend"></div>
+        </div>
+        <div class="map"></div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <h3>The data snapshot as of begining of 2023</h3>
+</div>
+</body>
+</html>
